@@ -27,6 +27,10 @@ OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "qwen/qwen3.6-plus-preview:free")
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
+# Google Gemini (alternative LLM provider)
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
+GOOGLE_MODEL = os.environ.get("GOOGLE_MODEL", "gemini-3.1-pro-preview")
+
 # Marker categories and names (from the paper's Table 1)
 MARKER_NAMES = [
     "standardized_structure",       # Structural
