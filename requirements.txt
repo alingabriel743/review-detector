@@ -16,3 +16,4 @@ plotly
 torchvision
 altair<5
 lightgbm
+imghdr
