@@ -174,7 +174,7 @@ def extract_markers_gemini(review_text: str, api_key: str = None, model: str = N
             prompt,
             generation_config=genai.GenerationConfig(
                 temperature=0.0,
-                max_output_tokens=400,
+                max_output_tokens=2048,
             ),
         )
         content = response.text.strip()
