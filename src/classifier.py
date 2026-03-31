@@ -193,10 +193,13 @@ def train_lightgbm(X_train, y_train) -> LGBMClassifier:
 
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=RANDOM_SEED)
 
+    # Use DataFrame with feature names to avoid LightGBM warnings
+    X_df = pd.DataFrame(X_train, columns=MARKER_NAMES)
+
     grid_search = GridSearchCV(
         base_model, param_grid, cv=cv, scoring="roc_auc", n_jobs=-1, verbose=1,
     )
-    grid_search.fit(X_train, y_train)
+    grid_search.fit(X_df, y_train)
 
     best_model = grid_search.best_estimator_
     print(f"[LGBM] Best params: {grid_search.best_params_}")
@@ -210,8 +213,7 @@ def train_logistic_regression(X_train, y_train) -> Pipeline:
     """Train a Logistic Regression classifier with grid search (scaled features)."""
     param_grid = {
         "lr__C": [0.01, 0.1, 1.0, 10.0, 100.0],
-        "lr__penalty": ["l1", "l2"],
-        "lr__solver": ["saga"],
+        "lr__l1_ratio": [0.0, 0.5, 1.0],
     }
 
     neg_count = np.sum(y_train == 0)
@@ -223,7 +225,9 @@ def train_logistic_regression(X_train, y_train) -> Pipeline:
         ("lr", LogisticRegression(
             random_state=RANDOM_SEED,
             class_weight={0: 1.0, 1: weight},
-            max_iter=1000,
+            max_iter=5000,
+            solver="saga",
+            penalty="elasticnet",
         )),
     ])
 
@@ -244,8 +248,13 @@ def train_logistic_regression(X_train, y_train) -> Pipeline:
 
 def evaluate_model(model, X_test, y_test, name: str) -> dict:
     """Evaluate a single model and return results dict."""
-    y_pred = model.predict(X_test)
-    y_proba = model.predict_proba(X_test)[:, 1]
+    # Use DataFrame for LightGBM to avoid feature name warnings
+    if isinstance(model, LGBMClassifier):
+        X_eval = pd.DataFrame(X_test, columns=MARKER_NAMES)
+    else:
+        X_eval = X_test
+    y_pred = model.predict(X_eval)
+    y_proba = model.predict_proba(X_eval)[:, 1]
 
     acc = accuracy_score(y_test, y_pred)
     auc = roc_auc_score(y_test, y_proba)
