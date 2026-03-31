@@ -1,0 +1,26 @@
+{
+  "model_name": "XGBoost",
+  "accuracy": 0.995,
+  "auc_roc": 0.99995,
+  "classification_report": "              precision    recall  f1-score   support\n\n       Human       0.99      0.99      0.99       200\nAI-Generated       0.99      0.99      0.99       200\n\n    accuracy                           0.99       400\n   macro avg       0.99      0.99      0.99       400\nweighted avg       0.99      0.99      0.99       400\n",
+  "confusion_matrix": [
+    [
+      199,
+      1
+    ],
+    [
+      1,
+      199
+    ]
+  ],
+  "feature_importance": {
+    "standardized_structure": 0.871715784072876,
+    "predictable_criticism": 0.00017163573647849262,
+    "excessive_balance": 0.0023109877947717905,
+    "linguistic_homogeneity": 0.06592877954244614,
+    "generic_domain_language": 0.02418377250432968,
+    "conceptual_feedback": 0.011938696727156639,
+    "absence_personal_signals": 0.0,
+    "repetition_patterns": 0.023750312626361847
+  }
+}

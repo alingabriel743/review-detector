@@ -1,0 +1,36 @@
+# Virtual environment
+.venv/
+
+# Claude Code
+.claude/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Heavy data (not needed for deployment)
+data/PeerRead/
+data/gen_review_data/
+data/gen_review.zip
+data/ai_reviews_cache.csv
+data/features_checkpoint*.csv
+
+# Keep these in data/ (needed for deployment):
+# data/dataset.csv
+# data/features_cache.csv
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test/scratch scripts
+src/test_*.py
+src/rescore_*.py
+
+# Original docx and PDF (reference only)
+*.docx
+*.pdf

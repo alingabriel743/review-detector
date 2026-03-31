@@ -1,0 +1,106 @@
+{
+  "XGBoost": {
+    "model_name": "XGBoost",
+    "accuracy": 0.995,
+    "auc_roc": 0.99995,
+    "classification_report": "              precision    recall  f1-score   support\n\n       Human       0.99      0.99      0.99       200\nAI-Generated       0.99      0.99      0.99       200\n\n    accuracy                           0.99       400\n   macro avg       0.99      0.99      0.99       400\nweighted avg       0.99      0.99      0.99       400\n",
+    "confusion_matrix": [
+      [
+        199,
+        1
+      ],
+      [
+        1,
+        199
+      ]
+    ],
+    "feature_importance": {
+      "standardized_structure": 0.871715784072876,
+      "predictable_criticism": 0.00017163573647849262,
+      "excessive_balance": 0.0023109877947717905,
+      "linguistic_homogeneity": 0.06592877954244614,
+      "generic_domain_language": 0.02418377250432968,
+      "conceptual_feedback": 0.011938696727156639,
+      "absence_personal_signals": 0.0,
+      "repetition_patterns": 0.023750312626361847
+    }
+  },
+  "RandomForest": {
+    "model_name": "RandomForest",
+    "accuracy": 0.9975,
+    "auc_roc": 0.9998750000000001,
+    "classification_report": "              precision    recall  f1-score   support\n\n       Human       1.00      1.00      1.00       200\nAI-Generated       1.00      0.99      1.00       200\n\n    accuracy                           1.00       400\n   macro avg       1.00      1.00      1.00       400\nweighted avg       1.00      1.00      1.00       400\n",
+    "confusion_matrix": [
+      [
+        200,
+        0
+      ],
+      [
+        1,
+        199
+      ]
+    ],
+    "feature_importance": {
+      "standardized_structure": 0.35044515288417,
+      "predictable_criticism": 0.03093940175530126,
+      "excessive_balance": 0.0017021107997962225,
+      "linguistic_homogeneity": 0.1619573307467791,
+      "generic_domain_language": 0.13550357513261468,
+      "conceptual_feedback": 0.03824153790175389,
+      "absence_personal_signals": 0.01496114499304948,
+      "repetition_patterns": 0.2662497457865353
+    }
+  },
+  "LightGBM": {
+    "model_name": "LightGBM",
+    "accuracy": 1.0,
+    "auc_roc": 1.0,
+    "classification_report": "              precision    recall  f1-score   support\n\n       Human       1.00      1.00      1.00       200\nAI-Generated       1.00      1.00      1.00       200\n\n    accuracy                           1.00       400\n   macro avg       1.00      1.00      1.00       400\nweighted avg       1.00      1.00      1.00       400\n",
+    "confusion_matrix": [
+      [
+        200,
+        0
+      ],
+      [
+        0,
+        200
+      ]
+    ],
+    "feature_importance": {
+      "standardized_structure": 468,
+      "predictable_criticism": 7,
+      "excessive_balance": 9,
+      "linguistic_homogeneity": 736,
+      "generic_domain_language": 258,
+      "conceptual_feedback": 70,
+      "absence_personal_signals": 12,
+      "repetition_patterns": 452
+    }
+  },
+  "LogisticRegression": {
+    "model_name": "LogisticRegression",
+    "accuracy": 0.9975,
+    "auc_roc": 0.99905,
+    "classification_report": "              precision    recall  f1-score   support\n\n       Human       1.00      1.00      1.00       200\nAI-Generated       1.00      0.99      1.00       200\n\n    accuracy                           1.00       400\n   macro avg       1.00      1.00      1.00       400\nweighted avg       1.00      1.00      1.00       400\n",
+    "confusion_matrix": [
+      [
+        200,
+        0
+      ],
+      [
+        1,
+        199
+      ]
+    ],
+    "feature_importance": {
+      "standardized_structure": 1.9364856122951368,
+      "predictable_criticism": 0.42560286689298993,
+      "excessive_balance": 0.2733415491940598,
+      "linguistic_homogeneity": 1.1428041521365484,
+      "generic_domain_language": 1.105173688204845,
+      "conceptual_feedback": 0.8000045897702639,
+      "absence_personal_signals": 0.6095440893606479,
+      "repetition_patterns": 1.097203782812415
+    }
+  }
+}

@@ -1,0 +1,35 @@
+======================================================================
+  AI-GENERATED PEER REVIEW DETECTION REPORT
+======================================================================
+  Generated: 2026-03-31T00:06:13.325181
+
+  PREDICTION: Human
+  AI Probability: 0.4%  |  Confidence: High
+
+  ASSESSMENT: Review appears to be human-authored.
+----------------------------------------------------------------------
+
+  DETECTED MARKERS:
+    Standardized Structure          [░░░░░░░░░░] 0.05  (Low)
+    Predictable Criticism           [███░░░░░░░] 0.30  (Low)
+    Excessive Balance               [█░░░░░░░░░] 0.10  (Low)
+    Linguistic Homogeneity          [█████░░░░░] 0.55  (Medium)
+    Generic Domain Language         [██░░░░░░░░] 0.25  (Low)
+    Conceptual Feedback             [██████░░░░] 0.65  (Medium)
+    No Personal Signals             [█░░░░░░░░░] 0.10  (Low)
+    Repetition Patterns             [█░░░░░░░░░] 0.10  (Low)
+
+  KEY EXPLANATORY FEATURES (SHAP):
+    ↓ Standardized Structure          SHAP=-3.1543  (toward Human)
+    ↓ Linguistic Homogeneity          SHAP=-2.4201  (toward Human)
+    ↑ Generic Domain Language         SHAP=+1.3663  (toward AI)
+    ↓ Conceptual Feedback             SHAP=-0.6642  (toward Human)
+    ↓ Repetition Patterns             SHAP=-0.5943  (toward Human)
+
+  SIMILAR REVIEWS (RAG):
+    Found: 4 similar | 4 human, 0 AI | Avg similarity: 0.671
+    [Human] sim=0.693: This paper is well motivated and clearly written, and is representative of the r...
+    [Human] sim=0.693: This paper is well motivated and clearly written, and is representative of the r...
+    [Human] sim=0.648: This paper proposed a hardware accelerator for DNN. It utilized the fact that DN...
+
+======================================================================
