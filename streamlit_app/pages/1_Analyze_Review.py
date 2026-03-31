@@ -218,11 +218,32 @@ with st.spinner("Extracting markers..."):
         if not gemini_key:
             st.error("Please enter a Google API key in the sidebar.")
             st.stop()
-        markers = extract_markers_gemini(review_text, api_key=gemini_key, model=gemini_model)
-        if all(v == 0.0 for v in markers.values()):
-            st.warning("Gemini returned empty scores. Falling back to rule-based.")
-            from feature_extractor import extract_markers_rulebased
-            markers = extract_markers_rulebased(review_text)
+        try:
+            import google.generativeai as genai
+            genai.configure(api_key=gemini_key)
+            gemini_model_obj = genai.GenerativeModel(gemini_model)
+            from feature_extractor import EXTRACTION_PROMPT, MARKER_NAMES as _MN
+            import re, json
+            prompt = EXTRACTION_PROMPT.format(review_text=review_text[:3000])
+            resp = gemini_model_obj.generate_content(
+                prompt,
+                generation_config=genai.GenerationConfig(temperature=0.0, max_output_tokens=2048),
+            )
+            content = resp.text.strip()
+            json_match = re.search(r"\{[\s\S]*\}", content)
+            if json_match:
+                data = json.loads(json_match.group())
+                markers = {}
+                for m in _MN:
+                    val = data.get(m, 0.0)
+                    markers[m] = float(val.get("score", 0.0) if isinstance(val, dict) else val)
+            else:
+                st.warning(f"Gemini response could not be parsed. Raw: `{content[:300]}`\nFalling back to rule-based.")
+                from feature_extractor import extract_markers_rulebased
+                markers = extract_markers_rulebased(review_text)
+        except Exception as e:
+            st.error(f"Gemini error: {e}")
+            st.stop()
     elif "OpenRouter" in extraction_method:
         from feature_extractor import extract_markers_openrouter
         if not openrouter_key:
