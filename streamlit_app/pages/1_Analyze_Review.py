@@ -162,6 +162,7 @@ with st.sidebar:
             st.session_state["openrouter_key"] = openrouter_key
         OPENROUTER_MODELS = [
             "qwen/qwen3.6-plus-preview:free",
+            "z-ai/glm-4.5-air:free",
             "google/gemini-2.5-pro-preview",
             "google/gemini-2.5-flash-preview",
             "google/gemini-2.0-flash",
