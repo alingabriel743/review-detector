@@ -160,10 +160,20 @@ with st.sidebar:
         )
         if openrouter_key:
             st.session_state["openrouter_key"] = openrouter_key
-        openrouter_model = st.text_input(
+        OPENROUTER_MODELS = [
+            "qwen/qwen3.6-plus-preview:free",
+            "google/gemini-2.5-pro-preview",
+            "google/gemini-2.5-flash-preview",
+            "google/gemini-2.0-flash",
+            "google/gemini-pro",
+            "meta-llama/llama-3.3-70b-instruct:free",
+            "mistralai/mistral-7b-instruct:free",
+        ]
+        openrouter_model = st.selectbox(
             "Model",
-            value="qwen/qwen3.6-plus-preview:free",
-            help="Default: qwen/qwen3.6-plus-preview:free (free tier). Browse models at https://openrouter.ai/models",
+            OPENROUTER_MODELS,
+            index=0,
+            help="Browse all models at https://openrouter.ai/models",
         )
 
     all_models = load_models()
