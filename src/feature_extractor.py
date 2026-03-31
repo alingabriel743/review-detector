@@ -34,6 +34,8 @@ from config import (
     AWS_REGION,
     BEDROCK_MODEL_ID,
     DATA_DIR,
+    GOOGLE_API_KEY,
+    GOOGLE_MODEL,
     MARKER_NAMES,
     OPENROUTER_API_KEY,
     OPENROUTER_BASE_URL,
@@ -154,6 +156,42 @@ def extract_markers_openrouter(review_text: str, api_key: str = None, model: str
             return scores
     except Exception as e:
         print(f"OpenRouter extraction error: {e}")
+    return {m: 0.0 for m in MARKER_NAMES}
+
+
+def extract_markers_gemini(review_text: str, api_key: str = None, model: str = None) -> dict:
+    """Use Google Gemini to extract marker scores from a single review."""
+    import google.generativeai as genai
+
+    api_key = api_key or GOOGLE_API_KEY
+    model = model or GOOGLE_MODEL
+    prompt = EXTRACTION_PROMPT.format(review_text=review_text[:3000])
+
+    try:
+        genai.configure(api_key=api_key)
+        gemini_model = genai.GenerativeModel(model)
+        response = gemini_model.generate_content(
+            prompt,
+            generation_config=genai.GenerationConfig(
+                temperature=0.0,
+                max_output_tokens=400,
+            ),
+        )
+        content = response.text.strip()
+
+        json_match = re.search(r"\{[\s\S]*\}", content)
+        if json_match:
+            data = json.loads(json_match.group())
+            scores = {}
+            for marker in MARKER_NAMES:
+                val = data.get(marker, 0.0)
+                if isinstance(val, dict):
+                    scores[marker] = float(val.get("score", 0.0))
+                else:
+                    scores[marker] = float(val)
+            return scores
+    except Exception as e:
+        print(f"Gemini extraction error: {e}")
     return {m: 0.0 for m in MARKER_NAMES}
 
 

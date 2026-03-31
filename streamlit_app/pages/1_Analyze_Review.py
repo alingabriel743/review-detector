@@ -112,13 +112,39 @@ with st.sidebar:
     st.header("Settings")
     extraction_method = st.radio(
         "Feature Extraction",
-        ["Rule-Based (instant)", "LLM via OpenRouter"],
+        ["Rule-Based (instant)", "LLM via Gemini", "LLM via OpenRouter"],
         index=0,
     )
 
     openrouter_key = None
     openrouter_model = None
-    if "OpenRouter" in extraction_method:
+    gemini_key = None
+    gemini_model = None
+
+    if "Gemini" in extraction_method:
+        try:
+            from config import GOOGLE_API_KEY, GOOGLE_MODEL
+        except ImportError:
+            GOOGLE_API_KEY = ""
+            GOOGLE_MODEL = "gemini-3.1-pro-preview"
+        st.markdown("---")
+        st.subheader("Gemini Config")
+        gemini_key = st.text_input(
+            "Google API Key",
+            value=st.session_state.get("gemini_key", GOOGLE_API_KEY),
+            type="password",
+            help="Get a key at https://aistudio.google.com/app/apikey",
+            key="gemini_key_input",
+        )
+        if gemini_key:
+            st.session_state["gemini_key"] = gemini_key
+        gemini_model = st.text_input(
+            "Model",
+            value=GOOGLE_MODEL,
+            help="Default: gemini-3.1-pro-preview",
+        )
+
+    elif "OpenRouter" in extraction_method:
         try:
             from config import OPENROUTER_API_KEY
         except ImportError:
@@ -187,7 +213,17 @@ model = all_models[model_choice]
 
 # Extract markers
 with st.spinner("Extracting markers..."):
-    if "OpenRouter" in extraction_method:
+    if "Gemini" in extraction_method:
+        from feature_extractor import extract_markers_gemini
+        if not gemini_key:
+            st.error("Please enter a Google API key in the sidebar.")
+            st.stop()
+        markers = extract_markers_gemini(review_text, api_key=gemini_key, model=gemini_model)
+        if all(v == 0.0 for v in markers.values()):
+            st.warning("Gemini returned empty scores. Falling back to rule-based.")
+            from feature_extractor import extract_markers_rulebased
+            markers = extract_markers_rulebased(review_text)
+    elif "OpenRouter" in extraction_method:
         from feature_extractor import extract_markers_openrouter
         if not openrouter_key:
             st.error("Please enter an OpenRouter API key in the sidebar.")
