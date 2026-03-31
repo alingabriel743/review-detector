@@ -11,9 +11,8 @@ matplotlib>=3.7
 seaborn>=0.13
 python-docx>=1.0
 requests>=2.31
-streamlit
+streamlit>=1.37.0
 plotly
 torchvision
-altair<5
+altair>=5
 lightgbm
-imghdr
