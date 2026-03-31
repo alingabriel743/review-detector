@@ -1,0 +1,106 @@
+{
+  "XGBoost": {
+    "model_name": "XGBoost",
+    "accuracy": 0.9961406518010292,
+    "auc_roc": 0.9996338529638183,
+    "classification_report": "              precision    recall  f1-score   support\n\n       Human       1.00      1.00      1.00      1732\nAI-Generated       0.99      0.99      0.99       600\n\n    accuracy                           1.00      2332\n   macro avg       1.00      0.99      0.99      2332\nweighted avg       1.00      1.00      1.00      2332\n",
+    "confusion_matrix": [
+      [
+        1728,
+        4
+      ],
+      [
+        5,
+        595
+      ]
+    ],
+    "feature_importance": {
+      "standardized_structure": 0.026610350236296654,
+      "predictable_criticism": 0.0175944734364748,
+      "excessive_balance": 0.016128333285450935,
+      "linguistic_homogeneity": 0.023789625614881516,
+      "generic_domain_language": 0.016237450763583183,
+      "conceptual_feedback": 0.027485333383083344,
+      "absence_personal_signals": 0.5782383680343628,
+      "repetition_patterns": 0.2939160466194153
+    }
+  },
+  "RandomForest": {
+    "model_name": "RandomForest",
+    "accuracy": 0.9961406518010292,
+    "auc_roc": 0.9996964010777522,
+    "classification_report": "              precision    recall  f1-score   support\n\n       Human       1.00      1.00      1.00      1732\nAI-Generated       0.99      0.99      0.99       600\n\n    accuracy                           1.00      2332\n   macro avg       1.00      0.99      0.99      2332\nweighted avg       1.00      1.00      1.00      2332\n",
+    "confusion_matrix": [
+      [
+        1729,
+        3
+      ],
+      [
+        6,
+        594
+      ]
+    ],
+    "feature_importance": {
+      "standardized_structure": 0.10307089941076125,
+      "predictable_criticism": 0.04382485618117985,
+      "excessive_balance": 0.08063978529132566,
+      "linguistic_homogeneity": 0.18949432664921825,
+      "generic_domain_language": 0.10884090224044894,
+      "conceptual_feedback": 0.06664341429008169,
+      "absence_personal_signals": 0.2826176301638305,
+      "repetition_patterns": 0.1248681857731538
+    }
+  },
+  "LightGBM": {
+    "model_name": "LightGBM",
+    "accuracy": 0.9961406518010292,
+    "auc_roc": 0.9997040993071593,
+    "classification_report": "              precision    recall  f1-score   support\n\n       Human       1.00      1.00      1.00      1732\nAI-Generated       0.99      0.99      0.99       600\n\n    accuracy                           1.00      2332\n   macro avg       1.00      0.99      0.99      2332\nweighted avg       1.00      1.00      1.00      2332\n",
+    "confusion_matrix": [
+      [
+        1729,
+        3
+      ],
+      [
+        6,
+        594
+      ]
+    ],
+    "feature_importance": {
+      "standardized_structure": 754,
+      "predictable_criticism": 987,
+      "excessive_balance": 1231,
+      "linguistic_homogeneity": 1279,
+      "generic_domain_language": 782,
+      "conceptual_feedback": 1374,
+      "absence_personal_signals": 827,
+      "repetition_patterns": 836
+    }
+  },
+  "LogisticRegression": {
+    "model_name": "LogisticRegression",
+    "accuracy": 0.8996569468267581,
+    "auc_roc": 0.9583886643571978,
+    "classification_report": "              precision    recall  f1-score   support\n\n       Human       0.99      0.88      0.93      1732\nAI-Generated       0.73      0.96      0.83       600\n\n    accuracy                           0.90      2332\n   macro avg       0.86      0.92      0.88      2332\nweighted avg       0.92      0.90      0.90      2332\n",
+    "confusion_matrix": [
+      [
+        1521,
+        211
+      ],
+      [
+        23,
+        577
+      ]
+    ],
+    "feature_importance": {
+      "standardized_structure": 1.0477433358308796,
+      "predictable_criticism": 1.2579485308242933,
+      "excessive_balance": 1.895307094314669,
+      "linguistic_homogeneity": 2.7241709477249527,
+      "generic_domain_language": 1.7835841317874275,
+      "conceptual_feedback": 1.9406409525148622,
+      "absence_personal_signals": 1.2163756370164391,
+      "repetition_patterns": 2.8385287226241074
+    }
+  }
+}
