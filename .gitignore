@@ -17,20 +17,27 @@ data/PeerRead/
 data/gen_review_data/
 data/gen_review.zip
 data/ai_reviews_cache.csv
-data/features_checkpoint*.csv
 
-# Keep these in data/ (needed for deployment):
-# data/dataset.csv
-# data/features_cache.csv
+# Checkpoints (intermediate, not needed)
+data/*_checkpoint*.json
+data/*_checkpoint*.csv
 
 # OS files
 .DS_Store
 Thumbs.db
 
-# Test/scratch scripts
-src/test_*.py
-src/rescore_*.py
-
-# Original docx and PDF (reference only)
+# Reference documents (not code)
 *.docx
 *.pdf
+
+# One-off scripts (generation, scoring, testing)
+src/test_*.py
+src/rescore_*.py
+src/score_*.py
+src/gen_adversarial_*.py
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
