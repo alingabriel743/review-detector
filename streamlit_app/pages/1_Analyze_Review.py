@@ -277,12 +277,27 @@ pred_label = "AI-Generated" if ai_prob > 0.5 else "Human"
 
 # SHAP
 import shap
-explainer = shap.TreeExplainer(model)
-shap_vals = explainer(X)
-sv = shap_vals.values[0]
-if sv.ndim > 1:
-    sv = sv[:, 1]
-shap_dict = dict(zip(MARKER_NAMES, sv.tolist()))
+try:
+    explainer = shap.TreeExplainer(model)
+    shap_vals = explainer(X)
+    sv = shap_vals.values[0]
+    if sv.ndim > 1:
+        sv = sv[:, 1]
+    shap_dict = dict(zip(MARKER_NAMES, sv.tolist()))
+except Exception:
+    try:
+        # Fallback: LinearExplainer for logistic regression / linear models
+        bg = np.zeros((1, len(MARKER_NAMES)))
+        explainer = shap.LinearExplainer(model, bg)
+        shap_vals = explainer.shap_values(X)
+        if isinstance(shap_vals, list):
+            sv = shap_vals[1][0]
+        else:
+            sv = shap_vals[0]
+        shap_dict = dict(zip(MARKER_NAMES, sv.tolist()))
+    except Exception:
+        # If all else fails, use feature coefficients or zeros
+        shap_dict = {m: 0.0 for m in MARKER_NAMES}
 
 # ── Results ──────────────────────────────────────────────────────────────────
 st.divider()
