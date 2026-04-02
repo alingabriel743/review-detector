@@ -2,8 +2,15 @@
 Home page — AI-Generated Peer Review Detection Framework
 """
 
+import os
 import sys
+import warnings
 from pathlib import Path
+
+# Suppress noisy warnings from transformers/torch
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+warnings.filterwarnings("ignore", message=".*__path__.*")
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 # Add src to path so we can import pipeline modules
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))

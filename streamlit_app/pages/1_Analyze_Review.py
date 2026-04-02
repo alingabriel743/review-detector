@@ -1,7 +1,12 @@
 """Page 1 — Analyze a single peer review."""
 
+import os
 import sys
+import warnings
 from pathlib import Path
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+warnings.filterwarnings("ignore", message=".*__path__.*")
+warnings.filterwarnings("ignore", category=FutureWarning)
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 import numpy as np
@@ -275,7 +280,7 @@ proba = model.predict_proba(X)[0]
 ai_prob = float(proba[1])
 pred_label = "AI-Generated" if ai_prob > 0.5 else "Human"
 
-# SHAP
+# SHAP — use the right explainer for the model type
 import shap
 try:
     explainer = shap.TreeExplainer(model)
