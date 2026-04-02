@@ -88,11 +88,21 @@ def load_data():
     combined = DATA_DIR / "dataset_combined.csv"
     fallback = DATA_DIR / "features_cache.csv"
     df = pd.read_csv(combined) if combined.exists() else pd.read_csv(fallback)
-    X = df[MARKER_NAMES].values
-    y = df["label"].values
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.3, random_state=RANDOM_SEED, stratify=y
-    )
+
+    # Load saved test set (matches training split exactly)
+    X_test_path = DATA_DIR / "X_test.npy"
+    y_test_path = DATA_DIR / "y_test.npy"
+    if X_test_path.exists() and y_test_path.exists():
+        X_test = np.load(X_test_path)
+        y_test = np.load(y_test_path)
+        X_train = None
+        y_train = None
+    else:
+        X = df[MARKER_NAMES].values
+        y = df["label"].values
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.3, random_state=RANDOM_SEED, stratify=y
+        )
     return df, X_train, X_test, y_train, y_test
 
 
