@@ -84,7 +84,10 @@ FIG_DIR.mkdir(exist_ok=True)
 
 
 def load_data():
-    df = pd.read_csv(DATA_DIR / "features_cache.csv")
+    # Use combined dataset (all sources) if available
+    combined = DATA_DIR / "dataset_combined.csv"
+    fallback = DATA_DIR / "features_cache.csv"
+    df = pd.read_csv(combined) if combined.exists() else pd.read_csv(fallback)
     X = df[MARKER_NAMES].values
     y = df["label"].values
     X_train, X_test, y_train, y_test = train_test_split(
@@ -106,42 +109,51 @@ def load_models():
 # FIGURE 1: Dataset composition
 # ═══════════════════════════════════════════════════════════════════════════════
 def fig_dataset_composition(df):
-    fig, axes = plt.subplots(1, 3, figsize=(14, 4))
+    fig = plt.figure(figsize=(14, 10))
+    gs = gridspec.GridSpec(2, 2, figure=fig, hspace=0.4, wspace=0.4)
 
-    # (a) Class distribution
+    # (a) Class distribution — top left
+    ax_a = fig.add_subplot(gs[0, 0])
     counts = df["label"].value_counts().sort_index()
-    bars = axes[0].bar(["Human", "AI-Generated"], [counts[0], counts[1]],
-                       color=["#27ae60", "#e74c3c"], edgecolor="black", linewidth=0.5)
+    bars = ax_a.bar(["Human", "AI-Generated"], [counts[0], counts[1]],
+                    color=["#27ae60", "#e74c3c"], edgecolor="black", linewidth=0.5)
     for bar, val in zip(bars, [counts[0], counts[1]]):
-        axes[0].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 50,
-                     str(val), ha="center", fontweight="bold")
-    axes[0].set_ylabel("Number of Reviews")
-    axes[0].set_title("(a) Class Distribution")
+        ax_a.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 50,
+                  str(val), ha="center", fontweight="bold")
+    ax_a.set_ylabel("Number of Reviews")
+    ax_a.set_title("(a) Class Distribution")
 
-    # (b) Source distribution
+    # (b) Source distribution — top right
+    ax_b = fig.add_subplot(gs[0, 1])
     src = df["source"].value_counts()
     src_labels = [s.replace("peerread_", "PR:").replace("adversarial_", "Adv:").replace("genreview_ai_neutral", "Gen-Review") for s in src.index]
     colors = ["#27ae60" if "peerread" in s else "#e74c3c" for s in src.index]
-    bars = axes[1].barh(src_labels, src.values, color=colors, edgecolor="black", linewidth=0.5)
+    bars = ax_b.barh(src_labels, src.values, color=colors, edgecolor="black", linewidth=0.5)
+    max_src = src.values.max()
     for bar, val in zip(bars, src.values):
-        axes[1].text(bar.get_width() + 20, bar.get_y() + bar.get_height()/2,
-                     str(val), va="center", fontsize=9)
-    axes[1].set_xlabel("Count")
-    axes[1].set_title("(b) Source Distribution")
-    axes[1].invert_yaxis()
+        if val > max_src * 0.3:
+            ax_b.text(bar.get_width() - max_src * 0.02, bar.get_y() + bar.get_height()/2,
+                      str(val), va="center", ha="right", fontsize=9, color="white", fontweight="bold")
+        else:
+            ax_b.text(bar.get_width() + max_src * 0.02, bar.get_y() + bar.get_height()/2,
+                      str(val), va="center", fontsize=9)
+    ax_b.set_xlabel("Count")
+    ax_b.set_title("(b) Source Distribution")
+    ax_b.invert_yaxis()
 
-    # (c) Review length distribution
+    # (c) Review length distribution — bottom, spanning both columns
+    ax_c = fig.add_subplot(gs[1, :])
     df["wc"] = df["review_text"].str.split().str.len()
     human_wc = df[df["label"]==0]["wc"]
     ai_wc = df[df["label"]==1]["wc"]
-    axes[2].hist(human_wc, bins=50, alpha=0.7, color="#27ae60", label="Human", edgecolor="black", linewidth=0.3)
-    axes[2].hist(ai_wc, bins=50, alpha=0.7, color="#e74c3c", label="AI-Generated", edgecolor="black", linewidth=0.3)
-    axes[2].set_xlabel("Word Count")
-    axes[2].set_ylabel("Frequency")
-    axes[2].set_title("(c) Review Length Distribution")
-    axes[2].legend()
+    ax_c.hist(human_wc, bins=50, alpha=0.7, color="#27ae60", label="Human", edgecolor="black", linewidth=0.3)
+    ax_c.hist(ai_wc, bins=50, alpha=0.7, color="#e74c3c", label="AI-Generated", edgecolor="black", linewidth=0.3)
+    ax_c.set_xlabel("Word Count")
+    ax_c.set_ylabel("Frequency")
+    ax_c.set_title("(c) Review Length Distribution")
+    ax_c.legend()
 
-    plt.tight_layout()
+    plt.suptitle("Dataset Composition", fontsize=14)
     plt.savefig(FIG_DIR / "fig1_dataset_composition.pdf")
     plt.savefig(FIG_DIR / "fig1_dataset_composition.png")
     plt.close()
@@ -277,28 +289,42 @@ def fig_pr_curves(models, X_test, y_test):
 # FIGURE 6: Confusion matrices (2x2 grid)
 # ═══════════════════════════════════════════════════════════════════════════════
 def fig_confusion_matrices(models, X_test, y_test):
-    fig, axes = plt.subplots(1, 4, figsize=(18, 4))
+    # Use saved results from training
+    comp_path = OUTPUTS_DIR / "combined_comparison.json"
+    if not comp_path.exists():
+        comp_path = OUTPUTS_DIR / "classifier_comparison.json"
+    saved = {}
+    if comp_path.exists():
+        with open(comp_path) as f:
+            saved = json.load(f)
+
+    fig, axes = plt.subplots(2, 2, figsize=(10, 9))
+    axes = axes.flatten()
 
     for idx, (name, color) in enumerate(zip(MODEL_NAMES, MODEL_COLORS)):
-        if name not in models:
-            continue
-        model = models[name]
-        if name == "LightGBM":
-            X_input = pd.DataFrame(X_test, columns=MARKER_NAMES)
+        if name in saved:
+            cm = np.array(saved[name]["confusion_matrix"])
+            acc = saved[name]["accuracy"]
+        elif name in models:
+            model = models[name]
+            if name == "LightGBM":
+                X_input = pd.DataFrame(X_test, columns=MARKER_NAMES)
+            else:
+                X_input = X_test
+            y_pred = model.predict(X_input)
+            cm = confusion_matrix(y_test, y_pred)
+            acc = accuracy_score(y_test, y_pred)
         else:
-            X_input = X_test
-        y_pred = model.predict(X_input)
-        cm = confusion_matrix(y_test, y_pred)
-        acc = accuracy_score(y_test, y_pred)
+            continue
 
         sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", ax=axes[idx],
                     xticklabels=["Human", "AI"], yticklabels=["Human", "AI"],
-                    annot_kws={"size": 14}, linewidths=1, linecolor="black")
-        axes[idx].set_title(f"{name}\nAcc: {acc:.2%}", fontsize=11)
-        axes[idx].set_ylabel("True" if idx == 0 else "")
-        axes[idx].set_xlabel("Predicted")
+                    annot_kws={"size": 16}, linewidths=1, linecolor="black")
+        axes[idx].set_title(f"{name}  (Acc: {acc:.2%})", fontsize=12)
+        axes[idx].set_ylabel("True Label")
+        axes[idx].set_xlabel("Predicted Label")
 
-    plt.suptitle("Confusion Matrices — All Classifiers", fontsize=14, y=1.05)
+    plt.suptitle("Confusion Matrices — All Classifiers", fontsize=14)
     plt.tight_layout()
     plt.savefig(FIG_DIR / "fig6_confusion_matrices.pdf")
     plt.savefig(FIG_DIR / "fig6_confusion_matrices.png")
@@ -310,39 +336,67 @@ def fig_confusion_matrices(models, X_test, y_test):
 # FIGURE 7: Model comparison bar chart
 # ═══════════════════════════════════════════════════════════════════════════════
 def fig_model_comparison(models, X_test, y_test):
-    fig, axes = plt.subplots(1, 3, figsize=(14, 4.5))
+    # Use saved results from training (authoritative) instead of recomputing
+    comp_path = OUTPUTS_DIR / "combined_comparison.json"
+    if not comp_path.exists():
+        comp_path = OUTPUTS_DIR / "classifier_comparison.json"
 
     metrics = {"Accuracy": [], "AUC-ROC": [], "F1-Score": []}
     names_used = []
 
-    for name in MODEL_NAMES:
-        if name not in models:
-            continue
-        model = models[name]
-        if name == "LightGBM":
-            X_input = pd.DataFrame(X_test, columns=MARKER_NAMES)
-        else:
-            X_input = X_test
-        y_pred = model.predict(X_input)
-        y_proba = model.predict_proba(X_input)[:, 1]
-        metrics["Accuracy"].append(accuracy_score(y_test, y_pred))
-        metrics["AUC-ROC"].append(roc_auc_score(y_test, y_proba))
-        metrics["F1-Score"].append(f1_score(y_test, y_pred))
-        names_used.append(name)
+    if comp_path.exists():
+        with open(comp_path) as f:
+            saved = json.load(f)
+        for name in MODEL_NAMES:
+            if name in saved:
+                res = saved[name]
+                metrics["Accuracy"].append(res["accuracy"])
+                metrics["AUC-ROC"].append(res["auc_roc"])
+                # Compute F1 from confusion matrix
+                cm = np.array(res["confusion_matrix"])
+                tp = cm[1, 1]
+                fp = cm[0, 1]
+                fn = cm[1, 0]
+                f1 = 2 * tp / (2 * tp + fp + fn) if (2 * tp + fp + fn) > 0 else 0
+                metrics["F1-Score"].append(f1)
+                names_used.append(name)
+    else:
+        # Fallback: compute live
+        for name in MODEL_NAMES:
+            if name not in models:
+                continue
+            model = models[name]
+            if name == "LightGBM":
+                X_input = pd.DataFrame(X_test, columns=MARKER_NAMES)
+            else:
+                X_input = X_test
+            y_pred = model.predict(X_input)
+            y_proba = model.predict_proba(X_input)[:, 1]
+            metrics["Accuracy"].append(accuracy_score(y_test, y_pred))
+            metrics["AUC-ROC"].append(roc_auc_score(y_test, y_proba))
+            metrics["F1-Score"].append(f1_score(y_test, y_pred))
+            names_used.append(name)
 
-    for idx, (metric_name, values) in enumerate(metrics.items()):
-        bars = axes[idx].bar(names_used, values, color=MODEL_COLORS[:len(names_used)],
-                             edgecolor="black", linewidth=0.5)
+    # 2 on top, 1 on bottom centered
+    fig = plt.figure(figsize=(12, 9))
+    gs = gridspec.GridSpec(2, 2, figure=fig, hspace=0.4, wspace=0.35)
+
+    ax_positions = [gs[0, 0], gs[0, 1], gs[1, :]]
+    metric_items = list(metrics.items())
+
+    for idx, (metric_name, values) in enumerate(metric_items):
+        ax = fig.add_subplot(ax_positions[idx])
+        bars = ax.bar(names_used, values, color=MODEL_COLORS[:len(names_used)],
+                      edgecolor="black", linewidth=0.5)
         for bar, val in zip(bars, values):
-            axes[idx].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.002,
-                          f"{val:.4f}", ha="center", fontsize=9, fontweight="bold")
-        axes[idx].set_title(metric_name)
-        axes[idx].set_ylim(min(values) - 0.05, 1.005)
-        axes[idx].tick_params(axis="x", rotation=20)
-        axes[idx].grid(axis="y", alpha=0.3)
+            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.002,
+                    f"{val:.4f}", ha="center", fontsize=10, fontweight="bold")
+        ax.set_title(f"({chr(97+idx)}) {metric_name}", fontsize=12)
+        ax.set_ylim(min(values) - 0.05, 1.005)
+        ax.tick_params(axis="x", rotation=15)
+        ax.grid(axis="y", alpha=0.3)
 
-    plt.suptitle("Classifier Performance Comparison", fontsize=14, y=1.02)
-    plt.tight_layout()
+    plt.suptitle("Classifier Performance Comparison", fontsize=14)
     plt.savefig(FIG_DIR / "fig7_model_comparison.pdf")
     plt.savefig(FIG_DIR / "fig7_model_comparison.png")
     plt.close()
@@ -360,11 +414,9 @@ def fig_shap_importance(models, X_test):
     if not available:
         return
 
-    fig, axes = plt.subplots(1, len(available), figsize=(7 * len(available), 5))
-    if len(available) == 1:
-        axes = [axes]
-
-    for idx, name in enumerate(available):
+    # Compute SHAP for each model
+    all_shap = {}
+    for name in available:
         model = models[name]
         if name == "LightGBM":
             X_input = pd.DataFrame(X_test, columns=MARKER_NAMES)
@@ -375,25 +427,44 @@ def fig_shap_importance(models, X_test):
         vals = shap_values.values
         if vals.ndim == 3:
             vals = vals[:, :, 1]
+        all_shap[name] = np.abs(vals).mean(axis=0)
 
-        mean_abs = np.abs(vals).mean(axis=0)
+    # 2 on top, 1 on bottom centered
+    fig = plt.figure(figsize=(16, 11))
+    gs = gridspec.GridSpec(2, 2, figure=fig, hspace=0.4, wspace=0.5)
+
+    ax_positions = [
+        gs[0, 0],  # top-left
+        gs[0, 1],  # top-right
+        gs[1, :],  # bottom, spanning both columns
+    ]
+
+    for idx, name in enumerate(available):
+        ax = fig.add_subplot(ax_positions[idx])
+        mean_abs = all_shap[name]
         sorted_idx = np.argsort(mean_abs)
         colors = [CAT_COLORS[CATEGORY_MAP[i]] for i in sorted_idx]
 
-        bars = axes[idx].barh([MARKER_LABELS_FULL[i] for i in sorted_idx], mean_abs[sorted_idx],
-                              color=colors, edgecolor="black", linewidth=0.5)
+        bars = ax.barh([MARKER_LABELS_FULL[i] for i in sorted_idx], mean_abs[sorted_idx],
+                       color=colors, edgecolor="black", linewidth=0.5)
+        max_val = mean_abs.max()
         for bar, val in zip(bars, mean_abs[sorted_idx]):
-            axes[idx].text(bar.get_width() + 0.02, bar.get_y() + bar.get_height()/2,
-                           f"{val:.3f}", va="center", fontsize=9)
-        axes[idx].set_xlabel("Mean |SHAP Value|")
-        axes[idx].set_title(f"{name}")
+            # Place text inside bar if bar is wide enough, otherwise outside
+            if val > max_val * 0.3:
+                ax.text(bar.get_width() - max_val * 0.02, bar.get_y() + bar.get_height()/2,
+                        f"{val:.3f}", va="center", ha="right", fontsize=9, color="white", fontweight="bold")
+            else:
+                ax.text(bar.get_width() + max_val * 0.02, bar.get_y() + bar.get_height()/2,
+                        f"{val:.3f}", va="center", ha="left", fontsize=9)
+        ax.set_xlabel("Mean |SHAP Value|")
+        ax.set_xlim(0, max_val * 1.15)
+        ax.set_title(f"({chr(97+idx)}) {name}", fontsize=12)
 
-    # Category legend on last axis
+    # Category legend on the bottom plot
     legend_elements = [Patch(facecolor=c, edgecolor="black", label=cat) for cat, c in CAT_COLORS.items()]
-    axes[-1].legend(handles=legend_elements, loc="lower right", title="Category", fontsize=8)
+    ax.legend(handles=legend_elements, loc="lower right", title="Category", fontsize=9)
 
-    plt.suptitle("Global Feature Importance (SHAP) — Tree-Based Classifiers", fontsize=14, y=1.02)
-    plt.tight_layout()
+    plt.suptitle("Global Feature Importance (SHAP) — Tree-Based Classifiers", fontsize=14)
     plt.savefig(FIG_DIR / "fig8_shap_importance.pdf")
     plt.savefig(FIG_DIR / "fig8_shap_importance.png")
     plt.close()
@@ -541,7 +612,8 @@ def fig_correlation_heatmap(df):
     fig, ax = plt.subplots(figsize=(8, 7))
 
     corr = df[MARKER_NAMES].corr()
-    mask = np.triu(np.ones_like(corr, dtype=bool))
+    # Mask above diagonal but keep diagonal visible
+    mask = np.triu(np.ones_like(corr, dtype=bool), k=1)
     sns.heatmap(corr, mask=mask, annot=True, fmt=".2f", cmap="RdBu_r",
                 center=0, vmin=-1, vmax=1, ax=ax,
                 xticklabels=MARKER_LABELS_SHORT, yticklabels=MARKER_LABELS_SHORT,
