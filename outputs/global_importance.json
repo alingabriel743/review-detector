@@ -1,10 +1,10 @@
 {
-  "standardized_structure": 3.656942129135132,
-  "linguistic_homogeneity": 1.7676364183425903,
-  "generic_domain_language": 1.0780034065246582,
-  "repetition_patterns": 0.9075356721878052,
-  "conceptual_feedback": 0.32606029510498047,
-  "excessive_balance": 0.01046681497246027,
-  "predictable_criticism": 0.0019771589431911707,
-  "absence_personal_signals": 0.0
+  "absence_personal_signals": 2.649052619934082,
+  "linguistic_homogeneity": 1.7809408903121948,
+  "repetition_patterns": 1.4277580976486206,
+  "predictable_criticism": 1.402677297592163,
+  "generic_domain_language": 1.2164685726165771,
+  "conceptual_feedback": 1.1994320154190063,
+  "excessive_balance": 1.0367870330810547,
+  "standardized_structure": 1.0278791189193726
 }

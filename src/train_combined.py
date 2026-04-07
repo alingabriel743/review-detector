@@ -49,6 +49,11 @@ def main():
     print(f"Train: human={np.sum(y_train==0)}, ai={np.sum(y_train==1)}")
     print(f"Test:  human={np.sum(y_test==0)}, ai={np.sum(y_test==1)}")
 
+    # Save test set for reproducible figures
+    np.save(DATA_DIR / "X_test.npy", X_test)
+    np.save(DATA_DIR / "y_test.npy", y_test)
+    print("Saved X_test.npy and y_test.npy")
+
     # Train all 4
     xgb, rf, lgbm, lr, results = train_all_classifiers(X_train, y_train, X_test, y_test)
 

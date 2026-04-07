@@ -18,9 +18,24 @@ data/gen_review_data/
 data/gen_review.zip
 data/ai_reviews_cache.csv
 
-# Checkpoints (intermediate, not needed)
+# Intermediate data files
 data/*_checkpoint*.json
 data/*_checkpoint*.csv
+data/adversarial_*.csv
+data/adversarial_features.csv
+data/dataset_adversarial.csv
+data/dataset_combined.csv
+data/features_cache_adversarial.csv
+data/genreview_scored.csv
+data/X_test.npy
+data/y_test.npy
+
+# Figures and local-only outputs
+outputs/figures/
+outputs/combined_comparison.json
+outputs/research_results.docx
+outputs/rag_evaluation.json
+outputs/classifier_results.json
 
 # OS files
 .DS_Store
@@ -29,8 +44,9 @@ Thumbs.db
 # Reference documents (not code)
 *.docx
 *.pdf
-# But keep figure PDFs
-!outputs/figures/*.pdf
+
+# Environment
+.env
 
 # One-off scripts (generation, scoring, testing)
 src/test_*.py
