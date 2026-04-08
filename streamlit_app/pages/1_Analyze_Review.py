@@ -117,16 +117,76 @@ with st.sidebar:
     st.header("Settings")
     extraction_method = st.radio(
         "Feature Extraction",
-        ["Rule-Based (instant)", "LLM via Gemini", "LLM via OpenRouter"],
+        ["Rule-Based (instant)", "LLM via OpenAI", "LLM via Anthropic", "LLM via Gemini"],
         index=0,
     )
 
-    openrouter_key = None
-    openrouter_model = None
+    openai_key = None
+    openai_model = None
+    anthropic_key = None
+    anthropic_model = None
     gemini_key = None
     gemini_model = None
 
-    if "Gemini" in extraction_method:
+    if "OpenAI" in extraction_method:
+        try:
+            from config import OPENAI_API_KEY, OPENAI_MODEL
+        except ImportError:
+            OPENAI_API_KEY = ""
+            OPENAI_MODEL = "gpt-4o"
+        st.markdown("---")
+        st.subheader("OpenAI Config")
+        openai_key = st.text_input(
+            "OpenAI API Key",
+            value=st.session_state.get("openai_key", OPENAI_API_KEY),
+            type="password",
+            help="Get a key at https://platform.openai.com/api-keys",
+            key="openai_key_input",
+        )
+        if openai_key:
+            st.session_state["openai_key"] = openai_key
+        OPENAI_MODELS = [
+            "gpt-4o",
+            "gpt-4o-mini",
+            "gpt-4-turbo",
+            "gpt-3.5-turbo",
+        ]
+        openai_model = st.selectbox(
+            "Model",
+            OPENAI_MODELS,
+            index=0,
+        )
+
+    elif "Anthropic" in extraction_method:
+        try:
+            from config import ANTHROPIC_API_KEY, ANTHROPIC_MODEL
+        except ImportError:
+            ANTHROPIC_API_KEY = ""
+            ANTHROPIC_MODEL = "claude-sonnet-4-20250514"
+        st.markdown("---")
+        st.subheader("Anthropic Config")
+        anthropic_key = st.text_input(
+            "Anthropic API Key",
+            value=st.session_state.get("anthropic_key", ANTHROPIC_API_KEY),
+            type="password",
+            help="Get a key at https://console.anthropic.com/settings/keys",
+            key="anthropic_key_input",
+        )
+        if anthropic_key:
+            st.session_state["anthropic_key"] = anthropic_key
+        ANTHROPIC_MODELS = [
+            "claude-sonnet-4-20250514",
+            "claude-haiku-4-20250414",
+            "claude-3-5-sonnet-20241022",
+            "claude-3-haiku-20240307",
+        ]
+        anthropic_model = st.selectbox(
+            "Model",
+            ANTHROPIC_MODELS,
+            index=0,
+        )
+
+    elif "Gemini" in extraction_method:
         try:
             from config import GOOGLE_API_KEY, GOOGLE_MODEL
         except ImportError:
@@ -147,39 +207,6 @@ with st.sidebar:
             "Model",
             value=GOOGLE_MODEL,
             help="Default: gemini-3.1-pro-preview",
-        )
-
-    elif "OpenRouter" in extraction_method:
-        try:
-            from config import OPENROUTER_API_KEY
-        except ImportError:
-            OPENROUTER_API_KEY = ""
-        st.markdown("---")
-        st.subheader("OpenRouter Config")
-        openrouter_key = st.text_input(
-            "Your API Key",
-            value=st.session_state.get("openrouter_key", OPENROUTER_API_KEY),
-            type="password",
-            help="Get a free key at https://openrouter.ai/keys",
-            key="openrouter_key_input",
-        )
-        if openrouter_key:
-            st.session_state["openrouter_key"] = openrouter_key
-        OPENROUTER_MODELS = [
-            "qwen/qwen3.6-plus-preview:free",
-            "z-ai/glm-4.5-air:free",
-            "google/gemini-2.5-pro-preview",
-            "google/gemini-2.5-flash-preview",
-            "google/gemini-2.0-flash",
-            "google/gemini-pro",
-            "meta-llama/llama-3.3-70b-instruct:free",
-            "mistralai/mistral-7b-instruct:free",
-        ]
-        openrouter_model = st.selectbox(
-            "Model",
-            OPENROUTER_MODELS,
-            index=0,
-            help="Browse all models at https://openrouter.ai/models",
         )
 
     all_models = load_models()
@@ -229,45 +256,34 @@ model = all_models[model_choice]
 
 # Extract markers
 with st.spinner("Extracting markers..."):
-    if "Gemini" in extraction_method:
+    if "OpenAI" in extraction_method:
+        from feature_extractor import extract_markers_openai
+        if not openai_key:
+            st.error("Please enter an OpenAI API key in the sidebar.")
+            st.stop()
+        markers = extract_markers_openai(review_text, api_key=openai_key, model=openai_model)
+        if all(v == 0.0 for v in markers.values()):
+            st.warning("OpenAI returned empty scores. Falling back to rule-based.")
+            from feature_extractor import extract_markers_rulebased
+            markers = extract_markers_rulebased(review_text)
+    elif "Anthropic" in extraction_method:
+        from feature_extractor import extract_markers_anthropic
+        if not anthropic_key:
+            st.error("Please enter an Anthropic API key in the sidebar.")
+            st.stop()
+        markers = extract_markers_anthropic(review_text, api_key=anthropic_key, model=anthropic_model)
+        if all(v == 0.0 for v in markers.values()):
+            st.warning("Anthropic returned empty scores. Falling back to rule-based.")
+            from feature_extractor import extract_markers_rulebased
+            markers = extract_markers_rulebased(review_text)
+    elif "Gemini" in extraction_method:
         from feature_extractor import extract_markers_gemini
         if not gemini_key:
             st.error("Please enter a Google API key in the sidebar.")
             st.stop()
-        try:
-            import google.generativeai as genai
-            genai.configure(api_key=gemini_key)
-            gemini_model_obj = genai.GenerativeModel(gemini_model)
-            from feature_extractor import EXTRACTION_PROMPT, MARKER_NAMES as _MN
-            import re, json
-            prompt = EXTRACTION_PROMPT.format(review_text=review_text[:3000])
-            resp = gemini_model_obj.generate_content(
-                prompt,
-                generation_config=genai.GenerationConfig(temperature=0.0, max_output_tokens=2048),
-            )
-            content = resp.text.strip()
-            json_match = re.search(r"\{[\s\S]*\}", content)
-            if json_match:
-                data = json.loads(json_match.group())
-                markers = {}
-                for m in _MN:
-                    val = data.get(m, 0.0)
-                    markers[m] = float(val.get("score", 0.0) if isinstance(val, dict) else val)
-            else:
-                st.warning(f"Gemini response could not be parsed. Raw: `{content[:300]}`\nFalling back to rule-based.")
-                from feature_extractor import extract_markers_rulebased
-                markers = extract_markers_rulebased(review_text)
-        except Exception as e:
-            st.error(f"Gemini error: {e}")
-            st.stop()
-    elif "OpenRouter" in extraction_method:
-        from feature_extractor import extract_markers_openrouter
-        if not openrouter_key:
-            st.error("Please enter an OpenRouter API key in the sidebar.")
-            st.stop()
-        markers = extract_markers_openrouter(review_text, api_key=openrouter_key, model=openrouter_model)
+        markers = extract_markers_gemini(review_text, api_key=gemini_key, model=gemini_model)
         if all(v == 0.0 for v in markers.values()):
-            st.warning("OpenRouter returned empty scores. Falling back to rule-based.")
+            st.warning("Gemini returned empty scores. Falling back to rule-based.")
             from feature_extractor import extract_markers_rulebased
             markers = extract_markers_rulebased(review_text)
     else:

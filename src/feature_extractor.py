@@ -30,6 +30,8 @@ import pandas as pd
 from tqdm import tqdm
 
 from config import (
+    ANTHROPIC_API_KEY,
+    ANTHROPIC_MODEL,
     ANTHROPIC_VERSION,
     AWS_REGION,
     BEDROCK_MODEL_ID,
@@ -37,9 +39,8 @@ from config import (
     GOOGLE_API_KEY,
     GOOGLE_MODEL,
     MARKER_NAMES,
-    OPENROUTER_API_KEY,
-    OPENROUTER_BASE_URL,
-    OPENROUTER_MODEL,
+    OPENAI_API_KEY,
+    OPENAI_MODEL,
 )
 
 
@@ -112,36 +113,23 @@ def extract_markers_llm(review_text: str, client) -> dict:
     return {m: 0.0 for m in MARKER_NAMES}
 
 
-def extract_markers_openrouter(review_text: str, api_key: str = None, model: str = None) -> dict:
-    """Use an open-source LLM via OpenRouter to extract marker scores."""
-    import requests
+def extract_markers_openai(review_text: str, api_key: str = None, model: str = None) -> dict:
+    """Use OpenAI API to extract marker scores."""
+    from openai import OpenAI
 
-    api_key = api_key or OPENROUTER_API_KEY
-    model = model or OPENROUTER_MODEL
+    api_key = api_key or OPENAI_API_KEY
+    model = model or OPENAI_MODEL
     prompt = EXTRACTION_PROMPT.format(review_text=review_text[:3000])
 
     try:
-        response = requests.post(
-            f"{OPENROUTER_BASE_URL}/chat/completions",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-                "HTTP-Referer": "https://ai-review-detector.app",
-                "X-Title": "AI Review Detector",
-            },
-            json={
-                "model": model,
-                "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": 400,
-                "temperature": 0.0,
-            },
-            timeout=60,
+        client = OpenAI(api_key=api_key)
+        response = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            max_completion_tokens=400,
+            temperature=0.0,
         )
-        if response.status_code != 200:
-            error_detail = response.text[:200]
-            print(f"OpenRouter API error {response.status_code}: {error_detail}")
-            return {m: 0.0 for m in MARKER_NAMES}
-        content = response.json()["choices"][0]["message"]["content"].strip()
+        content = response.choices[0].message.content.strip()
 
         json_match = re.search(r"\{[\s\S]*\}", content)
         if json_match:
@@ -155,7 +143,41 @@ def extract_markers_openrouter(review_text: str, api_key: str = None, model: str
                     scores[marker] = float(val)
             return scores
     except Exception as e:
-        print(f"OpenRouter extraction error: {e}")
+        print(f"OpenAI extraction error: {e}")
+    return {m: 0.0 for m in MARKER_NAMES}
+
+
+def extract_markers_anthropic(review_text: str, api_key: str = None, model: str = None) -> dict:
+    """Use Anthropic API to extract marker scores."""
+    import anthropic
+
+    api_key = api_key or ANTHROPIC_API_KEY
+    model = model or ANTHROPIC_MODEL
+    prompt = EXTRACTION_PROMPT.format(review_text=review_text[:3000])
+
+    try:
+        client = anthropic.Anthropic(api_key=api_key)
+        response = client.messages.create(
+            model=model,
+            max_tokens=400,
+            temperature=0.0,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        content = response.content[0].text.strip()
+
+        json_match = re.search(r"\{[\s\S]*\}", content)
+        if json_match:
+            data = json.loads(json_match.group())
+            scores = {}
+            for marker in MARKER_NAMES:
+                val = data.get(marker, 0.0)
+                if isinstance(val, dict):
+                    scores[marker] = float(val.get("score", 0.0))
+                else:
+                    scores[marker] = float(val)
+            return scores
+    except Exception as e:
+        print(f"Anthropic extraction error: {e}")
     return {m: 0.0 for m in MARKER_NAMES}
 
 

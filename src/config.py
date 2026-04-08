@@ -29,10 +29,13 @@ AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
 BEDROCK_MODEL_ID = "us.anthropic.claude-sonnet-4-6"
 ANTHROPIC_VERSION = "bedrock-2023-05-31"
 
-# OpenRouter (alternative LLM provider for deployment without Bedrock)
-OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
-OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "qwen/qwen3.6-plus-preview:free")
-OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+# OpenAI (alternative LLM provider)
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o")
+
+# Anthropic (alternative LLM provider)
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-20250514")
 
 # Google Gemini (alternative LLM provider)
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
