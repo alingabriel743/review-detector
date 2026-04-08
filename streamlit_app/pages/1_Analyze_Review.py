@@ -443,4 +443,4 @@ if rag:
         with st.expander(f"[{r['label']}] sim={r['similarity_score']:.3f} — {r['review_text'][:80]}..."):
             st.markdown(f"**Label:** <span style='color:{lc}'>{r['label']}</span>", unsafe_allow_html=True)
             st.markdown(f"**Similarity:** {r['similarity_score']:.4f} | **Source:** {r['source']}")
-            st.text(r["review_text"])
+            st.text(r.get("full_text", r["review_text"]))
