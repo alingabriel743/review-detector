@@ -162,7 +162,7 @@ with st.sidebar:
             from config import ANTHROPIC_API_KEY, ANTHROPIC_MODEL
         except ImportError:
             ANTHROPIC_API_KEY = ""
-            ANTHROPIC_MODEL = "claude-sonnet-4-20250514"
+            ANTHROPIC_MODEL = "claude-sonnet-4-6"
         st.markdown("---")
         st.subheader("Anthropic Config")
         anthropic_key = st.text_input(
@@ -175,7 +175,7 @@ with st.sidebar:
         if anthropic_key:
             st.session_state["anthropic_key"] = anthropic_key
         ANTHROPIC_MODELS = [
-            "claude-sonnet-4-20250514",
+            "claude-sonnet-4-6",
             "claude-haiku-4-20250414",
             "claude-3-5-sonnet-20241022",
             "claude-3-haiku-20240307",
